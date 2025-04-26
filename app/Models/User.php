@@ -21,7 +21,7 @@ class User extends Authenticatable
     protected function casts(): array
     {
         return [
-            'balance' => 'decimal:0,2',
+            'balance' => 'decimal:2',
         ];
     }
 }
