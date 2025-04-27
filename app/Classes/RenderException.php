@@ -2,6 +2,7 @@
 
 namespace App\Classes;
 
+use App\Exceptions\TransactionDuplicateException;
 use App\Traits\ApiResponses;
 use Exception;
 use Illuminate\Http\JsonResponse;
@@ -21,6 +22,7 @@ class RenderException
         return match (get_class($this->exception)) {
             NotFoundHttpException::class => $this->handlerNotFound(),
             ValidationException::class => $this->handleValidation(),
+            TransactionDuplicateException::class => $this->handlerTransactionDuplicate(),
             default => $this->handlerStandard(),
         };
     }
@@ -30,6 +32,7 @@ class RenderException
         $exceptionReflection = new ReflectionObject($this->exception);
 
         $error = [
+            'status' => 'error',
             'type' => $exceptionReflection->getShortName(),
             'message' => $this->exception->getMessage(),
             'code' => $this->exception->getCode(),
@@ -39,29 +42,30 @@ class RenderException
             $error['source'] = 'Line ' . $this->exception->getLine() . ' in ' . $this->exception->getFile();
         }
 
-        return $this->error($error);
+        return $this->error($error, 400);
     }
 
     private function handlerNotFound(): JsonResponse
     {
         $error = [
             'message' => 'Resource not found',
-            'code' => 404,
+            'status' => 'error',
         ];
 
         if (app()->hasDebugModeEnabled()) {
             $error['source'] = $this->exception->getPrevious()?->getModel();
         }
 
-        return $this->error($error);
+        return $this->error($error, 404);
     }
 
     private function handleValidation(): JsonResponse
     {
+        $errors = [];
         foreach ($this->exception->errors() as $key => $value) {
             foreach ($value as $message) {
                 $error = [
-                    'status' => 422,
+                    'status' => 'error',
                     'message' => $message,
                 ];
 
@@ -73,6 +77,21 @@ class RenderException
             }
         }
 
-        return $this->error($errors);
+        return $this->error($errors, 422);
+    }
+
+    private function handlerTransactionDuplicate(): JsonResponse
+    {
+        $error = [
+            'status' => 'error',
+            'message' => 'Transaction has already been processed',
+            'transaction_id' => $this->exception->getTransactionId(),
+        ];
+
+        if (app()->hasDebugModeEnabled()) {
+            $error['source'] = 'Line ' . $this->exception->getLine() . ' in ' . $this->exception->getFile();
+        }
+
+        return $this->error($error, 409);
     }
 }
