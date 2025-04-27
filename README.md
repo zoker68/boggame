@@ -1,61 +1,51 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Additional information:
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+For testing this API, you can use [Postman](https://www.getpostman.com/).
 
-## About Laravel
+My API points in Postman: [https://www.postman.com/blue-crescent-369451/workspace/bog-test](https://www.postman.com/blue-crescent-369451/workspace/bog-test)
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+# Test:
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## Controllers:
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+* [CreateAccountController](https://github.com/zoker68/boggame/blob/master/app/Http/Controllers/Account/CreateAccountController.php)
+* [ProcessTransactionController](https://github.com/zoker68/boggame/blob/master/app/Http/Controllers/Transaction/ProcessTransactionController.php)
 
-## Learning Laravel
+## Models:
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+* [User](https://github.com/zoker68/boggame/blob/master/app/Models/User.php)
+* [Transaction](https://github.com/zoker68/boggame/blob/master/app/Models/Transaction.php)
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+## Validations in requests:
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+* [CreateAccountRequest](https://github.com/zoker68/boggame/blob/master/app/Http/Requests/CreateAccountRequest.php)
+* [TransactionRequest](https://github.com/zoker68/boggame/blob/master/app/Http/Requests/TransactionRequest.php)
 
-## Laravel Sponsors
+## Exceptions:
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+* [NotEnoughBalanceException](https://github.com/zoker68/boggame/blob/master/app/Exceptions/NotEnoughBalanceException.php)  
+* [TransactionDuplicateException](https://github.com/zoker68/boggame/blob/master/app/Exceptions/TransactionDuplicateException.php)
 
-### Premium Partners
+## Database migrations:
 
-- **[Vehikl](https://vehikl.com/)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel/)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development/)**
-- **[Active Logic](https://activelogic.com)**
+* [ALL](https://github.com/zoker68/boggame/tree/master/database/migrations)
 
-## Contributing
+# Routes:
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+* [API](https://github.com/zoker68/boggame/blob/master/routes/api.php)
 
-## Code of Conduct
+# Render exception:
+* [RenderException](https://github.com/zoker68/boggame/blob/master/app/Classes/RenderException.php)
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+# Catching exceptions:
+* [Bootstrap/app.php](https://github.com/zoker68/boggame/blob/master/bootstrap/app.php)
 
-## Security Vulnerabilities
+I have double check for transaction duplication and balance.
+First i check conditions before SQL request. Then i try to catch SQL exception
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+To check balance i use `hasEnoughBalance` method in `User` model. After that i decrease balance in `decreaseBalance` method in `User` model and try to catch `QueryException`.
 
-## License
+To check for duplicate transaction i use `TrasactionRequest` class with `unique:transactions` rule and then i use `after` method to throw `DoubleTransactionException`.
+After that i try to catch `UniqueConstraintViolationException` when transaction is creating.
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+Before transaction creation i use `DB::beginTransaction`. And if i catch `UniqueConstraintViolationException` i rollback database transactions.

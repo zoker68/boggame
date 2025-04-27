@@ -42,7 +42,7 @@ class User extends Authenticatable
         \DB::beginTransaction();
 
         try {
-            sleep(10);
+            sleep(1);
 
             $this->decreaseBalance($transactionData['bet_amount']);
 
