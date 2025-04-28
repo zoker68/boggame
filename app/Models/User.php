@@ -37,7 +37,9 @@ class User extends Authenticatable
 
     public function makeBet(array $transactionData): Transaction
     {
-        $this->hasEnoughBalance($transactionData['bet_amount']);
+        if (! $this->hasEnoughBalance($transactionData['bet_amount'])) {
+            throw new NotEnoughBalanceException;
+        }
 
         \DB::beginTransaction();
 
@@ -57,11 +59,9 @@ class User extends Authenticatable
         return $transaction;
     }
 
-    public function hasEnoughBalance(float $bet_amount): void
+    public function hasEnoughBalance(float $bet_amount): bool
     {
-        if ($this->balance < $bet_amount) {
-            throw new NotEnoughBalanceException;
-        }
+        return $this->balance >= $bet_amount;
     }
 
     public function decreaseBalance($bet_amount): void
