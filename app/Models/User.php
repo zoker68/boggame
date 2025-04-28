@@ -64,7 +64,7 @@ class User extends Authenticatable
         return $this->balance >= $bet_amount;
     }
 
-    public function decreaseBalance($bet_amount): void
+    public function decreaseBalance(float $bet_amount): void
     {
         try {
             $this->decrement('balance', $bet_amount);
